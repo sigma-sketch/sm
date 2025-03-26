@@ -1,0 +1,2169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Collector</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #0a0a2a;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+        }
+        
+        .game-section {
+            flex: 1;
+            padding: 20px;
+            background-color: #1a1a4a;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+        
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .side-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        #star-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        #star {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.05s;
+        }
+        
+        #star:active {
+            transform: scale(0.95);
+        }
+        
+        .stats {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 18px;
+        }
+        
+        .resource {
+            font-weight: bold;
+            font-size: 24px;
+            color: #ffdd57;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .per-second {
+            font-size: 16px;
+            color: #aaaaff;
+        }
+        
+        .upgrades, .buildings, .prestige, .celestial, .achievements {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .tabbed-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 5px;
+            border-bottom: 1px solid #3a3a7a;
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 8px 15px;
+            background-color: #2a2a6a;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .tab:hover {
+            background-color: #3a3a8a;
+        }
+        
+        .tab.active {
+            background-color: #4a4a9a;
+        }
+        
+        .tab-content {
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .item {
+            padding: 10px;
+            background-color: #2a2a6a;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .item:hover {
+            background-color: #3a3a8a;
+        }
+        
+        .item.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .item-info {
+            flex-grow: 1;
+        }
+        
+        .item-name {
+            font-weight: bold;
+            color: #aaaaff;
+        }
+        
+        .item-desc {
+            font-size: 14px;
+            color: #ddddff;
+        }
+        
+        .item-cost {
+            color: #ffaa57;
+            font-weight: bold;
+        }
+        
+        .item-owned {
+            font-size: 14px;
+            color: #aaaaff;
+        }
+        
+        .button {
+            padding: 8px 15px;
+            background-color: #4a4a9a;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .button:hover {
+            background-color: #5a5aaa;
+        }
+        
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .settings {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .floating-text {
+            position: absolute;
+            animation: float-up 2s ease-out;
+            opacity: 0;
+            pointer-events: none;
+            font-weight: bold;
+            color: #ffdd57;
+            text-shadow: 0 0 5px black;
+        }
+        
+        @keyframes float-up {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-80px);
+                opacity: 0;
+            }
+        }
+        
+        .achievement {
+            padding: 10px;
+            background-color: #2a2a6a;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .achievement-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #4a4a9a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .achievement.locked {
+            opacity: 0.6;
+        }
+        
+        .achievement.locked .achievement-name {
+            color: #aaa;
+        }
+        
+        .achievement.locked .achievement-desc {
+            color: #888;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: #4a4a9a;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            animation: slide-in 0.5s, fade-out 0.5s 2.5s;
+            animation-fill-mode: forwards;
+            z-index: 100;
+        }
+        
+        @keyframes slide-in {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fade-out {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+        
+        #starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: #1a1a4a;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+        }
+        
+        .celestial-effect {
+            color: #ff8af5;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+    
+    <div class="container">
+        <div class="game-section main-area">
+            <h1>Star Collector</h1>
+            
+            <div id="star-container">
+                <svg id="star" viewBox="0 0 51 48" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M25.5 0L31.5 16.9H50.3L35.2 27.3L41.1 44.2L25.5 33.8L9.9 44.2L15.8 27.3L0.7 16.9H19.5L25.5 0Z" fill="#FFD700"/>
+                </svg>
+            </div>
+            
+            <div class="stats">
+                <div class="resource">
+                    <span id="stars">0</span> stars
+                </div>
+                <div class="per-second">
+                    <span id="stars-per-second">0.0</span> stars per second
+                </div>
+                <div id="stardust-container" class="resource" style="display: none;">
+                    <span id="stardust">0</span> stardust
+                </div>
+                <div id="cosmic-dust-container" class="resource" style="display: none;">
+                    <span id="cosmic-dust">0</span> cosmic dust
+                </div>
+                <div id="black-hole-energy-container" class="resource" style="display: none;">
+                    <span id="black-hole-energy">0</span> black hole energy
+                </div>
+            </div>
+            
+            <div class="settings">
+                <button class="button" id="save-button">Save Game</button>
+                <button class="button" id="export-button">Export Save</button>
+                <button class="button" id="import-button">Import Save</button>
+                <button class="button" id="reset-button">Hard Reset</button>
+                <button class="button" id="help-button">Help</button>
+            </div>
+        </div>
+        
+        <div class="game-section side-area">
+            <div class="tabbed-section">
+                <div class="tabs">
+                    <div class="tab active" data-tab="upgrades">Upgrades</div>
+                    <div class="tab" data-tab="buildings">Buildings</div>
+                    <div class="tab" data-tab="prestige">Prestige</div>
+                    <div class="tab" data-tab="celestial">Celestial</div>
+                    <div class="tab" data-tab="achievements">Achievements</div>
+                </div>
+                
+                <div id="upgrades" class="tab-content active">
+                    <div class="upgrades" id="upgrades-list">
+                        <!-- Upgrades are dynamically added here -->
+                    </div>
+                </div>
+                
+                <div id="buildings" class="tab-content">
+                    <div class="buildings" id="buildings-list">
+                        <!-- Buildings are dynamically added here -->
+                    </div>
+                </div>
+                
+                <div id="prestige" class="tab-content">
+                    <div class="prestige-info">
+                        <p>Resetting will convert your stars into stardust, which provides permanent bonuses!</p>
+                        <p>Each stardust gives +1% star production.</p>
+                        <p>You will receive <span id="stardust-gain">0</span> stardust if you reset now.</p>
+                        <button class="button" id="prestige-button" disabled>Reset and gain stardust</button>
+                    </div>
+                    <div class="prestige" id="prestige-upgrades">
+                        <!-- Prestige upgrades are dynamically added here -->
+                    </div>
+                </div>
+                
+                <div id="celestial" class="tab-content">
+                    <div class="celestial-info">
+                        <p>Celestial entities boost your star production in unique ways!</p>
+                        <p>You have <span id="cosmic-dust-display">0</span> cosmic dust.</p>
+                        <p>You can gain cosmic dust by reaching <strong>100 stardust</strong> when resetting.</p>
+                    </div>
+                    <div class="celestial" id="celestial-entities">
+                        <!-- Celestial entities are dynamically added here -->
+                    </div>
+                </div>
+                
+                <div id="achievements" class="tab-content">
+                    <div class="achievements" id="achievements-list">
+                        <!-- Achievements are dynamically added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>How to Play</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Star Collector</strong> is an incremental game where you collect stars!</p>
+                <p><strong>Basic gameplay:</strong></p>
+                <ul>
+                    <li>Click the star to collect stars</li>
+                    <li>Buy upgrades to increase your clicking power</li>
+                    <li>Purchase buildings to generate stars automatically</li>
+                    <li>Reset your progress for permanent bonuses (prestige)</li>
+                    <li>Unlock more powerful features as you progress</li>
+                </ul>
+                <p><strong>Resources:</strong></p>
+                <ul>
+                    <li><strong>Stars:</strong> The main resource. Click to earn or buy buildings to generate automatically</li>
+                    <li><strong>Stardust:</strong> Earned when resetting. Provides permanent bonuses</li>
+                    <li><strong>Cosmic Dust:</strong> A special resource for late-game upgrades</li>
+                    <li><strong>Black Hole Energy:</strong> The ultimate resource, unlocked in the very late game</li>
+                </ul>
+                <p>Your game is automatically saved every 30 seconds. You can also manually save.</p>
+                <p>Have fun exploring the cosmos!</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Game state
+        let game = {
+            stars: 0,
+            totalStars: 0,
+            clickPower: 1,
+            starsPerSecond: 0,
+            stardust: 0,
+            totalStardust: 0,
+            cosmicDust: 0,
+            blackHoleEnergy: 0,
+            prestigeMultiplier: 1,
+            clickMultiplier: 1,
+            productionMultiplier: 1,
+            buildings: [],
+            upgrades: [],
+            prestigeUpgrades: [],
+            celestialEntities: [],
+            achievements: [],
+            unlocks: {
+                stardust: false,
+                cosmicDust: false,
+                blackHoleEnergy: false,
+                prestigeTab: false,
+                celestialTab: false
+            },
+            lastUpdate: Date.now(),
+            lastSave: Date.now(),
+            stats: {
+                totalClicks: 0,
+                totalResets: 0,
+                playTime: 0
+            }
+        };
+        
+        // Initialize buildings
+        function initBuildings() {
+            return [
+                {
+                    id: 'telescope',
+                    name: 'Telescope',
+                    description: 'A basic star-gazing tool',
+                    baseCost: 10,
+                    baseProduction: 0.1,
+                    count: 0,
+                    unlocked: true,
+                    costGrowth: 1.15
+                },
+                {
+                    id: 'observatory',
+                    name: 'Observatory',
+                    description: 'A dedicated building for star observation',
+                    baseCost: 100,
+                    baseProduction: 0.5,
+                    count: 0,
+                    unlocked: false,
+                    costGrowth: 1.15,
+                    requirement: () => game.totalStars >= 50
+                },
+                {
+                    id: 'satellite',
+                    name: 'Satellite',
+                    description: 'A space-orbiting star collector',
+                    baseCost: 1100,
+                    baseProduction: 4,
+                    count: 0,
+                    unlocked: false,
+                    costGrowth: 1.15,
+                    requirement: () => game.totalStars >= 500
+                },
+                {
+                    id: 'space_station',
+                    name: 'Space Station',
+                    description: 'A manned platform for star research',
+                    baseCost: 12000,
+                    baseProduction: 20,
+                    count: 0,
+                    unlocked: false,
+                    costGrowth: 1.15,
+                    requirement: () => game.totalStars >= 5000
+                },
+                {
+                    id: 'moon_base',
+                    name: 'Moon Base',
+                    description: 'A lunar facility for closer star access',
+                    baseCost: 130000,
+                    baseProduction: 100,
+                    count: 0,
+                    unlocked: false,
+                    costGrowth: 1.15,
+                    requirement: () => game.totalStars >= 50000
+                },
+                {
+                    id: 'planetary_collector',
+                    name: 'Planetary Collector',
+                    description: 'Converts an entire planet into a star collecting device',
+                    baseCost: 1400000,
+                    baseProduction: 500,
+                    count: 0,
+                    unlocked: false,
+                    costGrowth: 1.15,
+                    requirement: () => game.totalStars >= 500000
+                },
+                {
+                    id: 'star_harvester',
+                    name: 'Star Harvester',
+                    description: 'Directly extracts energy from nearby stars',
+                    baseCost: 20000000,
+                    baseProduction: 3000,
+                    count: 0,
+                    unlocked: false,
+                    costGrowth: 1.15,
+                    requirement: () => game.totalStars >= 5000000
+                },
+                {
+                    id: 'galaxy_manipulator',
+                    name: 'Galaxy Manipulator',
+                    description: 'Controls the motion of entire galaxies',
+                    baseCost: 330000000,
+                    baseProduction: 15000,
+                    count: 0,
+                    unlocked: false,
+                    costGrowth: 1.15,
+                    requirement: () => game.totalStars >= 50000000
+                },
+                {
+                    id: 'cosmic_string',
+                    name: 'Cosmic String',
+                    description: 'A theoretical structure that attracts stars',
+                    baseCost: 5100000000,
+                    baseProduction: 75000,
+                    count: 0,
+                    unlocked: false,
+                    costGrowth: 1.15,
+                    requirement: () => game.totalStars >= 500000000
+                }
+            ];
+        }
+        
+        // Initialize upgrades
+        function initUpgrades() {
+            return [
+                {
+                    id: 'better_fingers',
+                    name: 'Better Fingers',
+                    description: 'Double your click power',
+                    cost: 50,
+                    purchased: false,
+                    unlocked: true,
+                    type: 'click',
+                    effect: () => {
+                        game.clickPower *= 2;
+                    }
+                },
+                {
+                    id: 'star_gloves',
+                    name: 'Star Gloves',
+                    description: 'Triple your click power',
+                    cost: 500,
+                    purchased: false,
+                    unlocked: false,
+                    type: 'click',
+                    requirement: () => game.totalStars >= 250,
+                    effect: () => {
+                        game.clickPower *= 3;
+                    }
+                },
+                {
+                    id: 'telescope_efficiency',
+                    name: 'Telescope Efficiency',
+                    description: 'Double Telescope production',
+                    cost: 200,
+                    purchased: false,
+                    unlocked: false,
+                    type: 'building',
+                    target: 'telescope',
+                    requirement: () => getBuildingById('telescope').count >= 10,
+                    effect: () => {
+                        getBuildingById('telescope').baseProduction *= 2;
+                        updateStarsPerSecond();
+                    }
+                },
+                {
+                    id: 'observatory_lens',
+                    name: 'Observatory Lens',
+                    description: 'Double Observatory production',
+                    cost: 2000,
+                    purchased: false,
+                    unlocked: false,
+                    type: 'building',
+                    target: 'observatory',
+                    requirement: () => getBuildingById('observatory').count >= 10,
+                    effect: () => {
+                        getBuildingById('observatory').baseProduction *= 2;
+                        updateStarsPerSecond();
+                    }
+                },
+                {
+                    id: 'star_attraction',
+                    name: 'Star Attraction',
+                    description: 'All buildings produce 50% more stars',
+                    cost: 5000,
+                    purchased: false,
+                    unlocked: false,
+                    type: 'production',
+                    requirement: () => game.totalStars >= 2500,
+                    effect: () => {
+                        game.productionMultiplier *= 1.5;
+                        updateStarsPerSecond();
+                    }
+                },
+                {
+                    id: 'cosmic_influence',
+                    name: 'Cosmic Influence',
+                    description: 'All buildings produce 100% more stars',
+                    cost: 50000,
+                    purchased: false,
+                    unlocked: false,
+                    type: 'production',
+                    requirement: () => game.totalStars >= 25000,
+                    effect: () => {
+                        game.productionMultiplier *= 2;
+                        updateStarsPerSecond();
+                    }
+                },
+                {
+                    id: 'stellar_formation',
+                    name: 'Stellar Formation',
+                    description: 'Clicking produces +10% of your stars per second',
+                    cost: 100000,
+                    purchased: false,
+                    unlocked: false,
+                    type: 'click',
+                    requirement: () => game.starsPerSecond >= 100,
+                    effect: () => {
+                        // Effect is applied in the click handler
+                    }
+                },
+                {
+                    id: 'galaxy_knowledge',
+                    name: 'Galaxy Knowledge',
+                    description: 'All buildings produce 150% more stars',
+                    cost: 1000000,
+                    purchased: false,
+                    unlocked: false,
+                    type: 'production',
+                    requirement: () => game.totalStars >= 500000,
+                    effect: () => {
+                        game.productionMultiplier *= 2.5;
+                        updateStarsPerSecond();
+                    }
+                },
+                {
+                    id: 'universe_manipulation',
+                    name: 'Universe Manipulation',
+                    description: 'All buildings produce 200% more stars',
+                    cost: 100000000,
+                    purchased: false,
+                    unlocked: false,
+                    type: 'production',
+                    requirement: () => game.totalStars >= 50000000,
+                    effect: () => {
+                        game.productionMultiplier *= 3;
+                        updateStarsPerSecond();
+                    }
+                },
+                {
+                    id: 'reality_bending',
+                    name: 'Reality Bending',
+                    description: 'Quadruple your click power',
+                    cost: 1000000000,
+                    purchased: false,
+                    unlocked: false,
+                    type: 'click',
+                    requirement: () => game.totalStars >= 500000000,
+                    effect: () => {
+                        game.clickPower *= 4;
+                    }
+                }
+            ];
+        }
+        
+        // Initialize prestige upgrades
+        function initPrestigeUpgrades() {
+            return [
+                {
+                    id: 'stardust_efficiency',
+                    name: 'Stardust Efficiency',
+                    description: 'Each stardust provides +1% more star production (total: +2%)',
+                    cost: 5,
+                    costType: 'stardust',
+                    purchased: false,
+                    unlocked: true,
+                    maxLevel: 10,
+                    level: 0,
+                    effect: () => {
+                        // Effect is applied in the calculatePrestigeBonus function
+                    }
+                },
+                {
+                    id: 'starter_pack',
+                    name: 'Starter Pack',
+                    description: 'Start with 10 telescopes after reset',
+                    cost: 10,
+                    costType: 'stardust',
+                    purchased: false,
+                    unlocked: true,
+                    effect: () => {
+                        // Effect is applied when resetting
+                    }
+                },
+                {
+                    id: 'click_boost',
+                    name: 'Click Boost',
+                    description: 'Each stardust provides +0.5% click power',
+                    cost: 15,
+                    costType: 'stardust',
+                    purchased: false,
+                    unlocked: true,
+                    effect: () => {
+                        // Effect is applied in the calculateClickMultiplier function
+                    }
+                },
+                {
+                    id: 'cosmic_knowledge',
+                    name: 'Cosmic Knowledge',
+                    description: 'Unlock cosmic dust conversion',
+                    cost: 50,
+                    costType: 'stardust',
+                    purchased: false,
+                    unlocked: true,
+                    effect: () => {
+                        game.unlocks.cosmicDust = true;
+                        updateResourcesVisibility();
+                        updateTabsVisibility();
+                    }
+                }
+            ];
+        }
+        
+        // Initialize celestial entities
+        function initCelestialEntities() {
+            return [
+                {
+                    id: 'neutron_star',
+                    name: 'Neutron Star',
+                    description: 'A dense stellar remnant that boosts your production',
+                    effect: 'All buildings produce 50% more stars',
+                    cost: 1,
+                    costType: 'cosmicDust',
+                    purchased: false,
+                    unlocked: true,
+                    effectValue: 1.5,
+                    effect: () => {
+                        game.productionMultiplier *= 1.5;
+                        updateStarsPerSecond();
+                    }
+                },
+                {
+                    id: 'pulsar',
+                    name: 'Pulsar',
+                    description: 'A rotating neutron star that emits beams of electromagnetic radiation',
+                    effect: 'Clicking generates 100% more stars',
+                    cost: 2,
+                    costType: 'cosmicDust',
+                    purchased: false,
+                    unlocked: true,
+                    effectValue: 2,
+                    effect: () => {
+                        game.clickMultiplier *= 2;
+                    }
+                },
+                {
+                    id: 'black_hole',
+                    name: 'Black Hole',
+                    description: 'A region of spacetime where gravity is so strong that nothing can escape',
+                    effect: 'Unlock Black Hole Energy generation',
+                    cost: 5,
+                    costType: 'cosmicDust',
+                    purchased: false,
+                    unlocked: true,
+                    effect: () => {
+                        game.unlocks.blackHoleEnergy = true;
+                        updateResourcesVisibility();
+                    }
+                },
+                {
+                    id: 'supernova',
+                    name: 'Supernova',
+                    description: 'The explosion of a star that briefly outshines an entire galaxy',
+                    effect: 'Stardust effect is doubled',
+                    cost: 10,
+                    costType: 'cosmicDust',
+                    purchased: false,
+                    unlocked: true,
+                    effect: () => {
+                        // Effect is applied in the calculatePrestigeBonus function
+                    }
+                }
+            ];
+        }
+        
+        // Initialize achievements
+        function initAchievements() {
+            return [
+                {
+                    id: 'first_star',
+                    name: 'First Star',
+                    description: 'Collect your first star',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.totalStars >= 1
+                },
+                {
+                    id: 'star_gazer',
+                    name: 'Star Gazer',
+                    description: 'Collect 100 stars',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.totalStars >= 100
+                },
+                {
+                    id: 'star_collector',
+                    name: 'Star Collector',
+                    description: 'Collect 1,000 stars',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.totalStars >= 1000
+                },
+                {
+                    id: 'star_hoarder',
+                    name: 'Star Hoarder',
+                    description: 'Collect 1,000,000 stars',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.totalStars >= 1000000
+                },
+                {
+                    id: 'first_building',
+                    name: 'First Building',
+                    description: 'Buy your first building',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.buildings.some(b => b.count > 0)
+                },
+                {
+                    id: 'building_empire',
+                    name: 'Building Empire',
+                    description: 'Own 50 buildings in total',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.buildings.reduce((sum, b) => sum + b.count, 0) >= 50
+                },
+                {
+                    id: 'first_upgrade',
+                    name: 'First Upgrade',
+                    description: 'Purchase your first upgrade',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.upgrades.some(u => u.purchased)
+                },
+                {
+                    id: 'clicking_maniac',
+                    name: 'Clicking Maniac',
+                    description: 'Click 1,000 times',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.stats.totalClicks >= 1000
+                },
+                {
+                    id: 'first_reset',
+                    name: 'First Reset',
+                    description: 'Perform your first prestige reset',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.stats.totalResets >= 1
+                },
+                {
+                    id: 'cosmic_power',
+                    name: 'Cosmic Power',
+                    description: 'Obtain your first cosmic dust',
+                    unlocked: false,
+                    hidden: true,
+                    condition: () => game.cosmicDust >= 1
+                },
+                {
+                    id: 'star_maker',
+                    name: 'Star Maker',
+                    description: 'Produce 1,000 stars per second',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.starsPerSecond >= 1000
+                },
+                {
+                    id: 'persistent_collector',
+                    name: 'Persistent Collector',
+                    description: 'Play for 1 hour total',
+                    unlocked: false,
+                    hidden: false,
+                    condition: () => game.stats.playTime >= 3600
+                }
+            ];
+        }
+        
+        // Initialize game data
+        function initGame() {
+            game.buildings = initBuildings();
+            game.upgrades = initUpgrades();
+            game.prestigeUpgrades = initPrestigeUpgrades();
+            game.celestialEntities = initCelestialEntities();
+            game.achievements = initAchievements();
+            updateStarsPerSecond();
+            renderBuildings();
+            renderUpgrades();
+            renderPrestigeUpgrades();
+            renderCelestialEntities();
+            renderAchievements();
+            updateResourcesVisibility();
+            updateTabsVisibility();
+        }
+        
+        // Check if storage method is available
+        let storageMethod = 'none';
+        
+        function checkStorageAvailability() {
+            // Check IndexedDB availability
+            try {
+                if (window.indexedDB) {
+                    // Try to open a test database
+                    const testRequest = indexedDB.open('testDB');
+                    testRequest.onerror = () => {
+                        console.log('IndexedDB not available, falling back to localStorage');
+                        checkLocalStorageAvailability();
+                    };
+                    testRequest.onsuccess = () => {
+                        // Clean up the test database
+                        testRequest.result.close();
+                        indexedDB.deleteDatabase('testDB');
+                        storageMethod = 'indexedDB';
+                        console.log('Using IndexedDB for storage');
+                    };
+                } else {
+                    checkLocalStorageAvailability();
+                }
+            } catch (e) {
+                checkLocalStorageAvailability();
+            }
+        }
+        
+        function checkLocalStorageAvailability() {
+            try {
+                // Try to use localStorage
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                storageMethod = 'localStorage';
+                console.log('Using localStorage for storage');
+            } catch (e) {
+                storageMethod = 'none';
+                console.log('No storage method available, using memory only');
+                showNotification('Warning: No storage available. Use export feature to save your progress.');
+            }
+        }
+        
+        // Initialize storage
+        checkStorageAvailability();
+        
+        // Initialize IndexedDB if available
+        function initializeDB() {
+            return new Promise((resolve, reject) => {
+                if (storageMethod !== 'indexedDB') {
+                    reject(new Error('IndexedDB not available'));
+                    return;
+                }
+                
+                const request = indexedDB.open('StarCollectorDB', 1);
+                
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event.target.error);
+                    storageMethod = 'localStorage'; // Fall back to localStorage
+                    reject(event.target.error);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('saveData')) {
+                        db.createObjectStore('saveData', { keyPath: 'id' });
+                    }
+                };
+                
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+            });
+        }
+        
+        // Save game using the best available method
+        async function saveGame() {
+            game.lastSave = Date.now();
+            
+            if (storageMethod === 'indexedDB') {
+                try {
+                    const db = await initializeDB();
+                    const transaction = db.transaction(['saveData'], 'readwrite');
+                    const store = transaction.objectStore('saveData');
+                    
+                    // Create a copy of the game state to save
+                    const saveData = {
+                        id: 'mainSave',
+                        timestamp: Date.now(),
+                        gameState: JSON.stringify(game)
+                    };
+                    
+                    const request = store.put(saveData);
+                    
+                    request.onsuccess = () => {
+                        showNotification('Game saved!');
+                    };
+                    
+                    request.onerror = (event) => {
+                        console.error('Error saving to IndexedDB:', event.target.error);
+                        saveFallback(); // Try localStorage if IndexedDB fails
+                    };
+                } catch (error) {
+                    console.error('Failed to save to IndexedDB:', error);
+                    saveFallback(); // Try localStorage if IndexedDB fails
+                }
+            } else {
+                saveFallback();
+            }
+        }
+        
+        // Fallback save method using localStorage
+        function saveFallback() {
+            try {
+                if (storageMethod === 'localStorage') {
+                    localStorage.setItem('starCollectorSave', JSON.stringify(game));
+                    showNotification('Game saved!');
+                } else {
+                    showNotification('Cannot save automatically. Use Export to save your progress.');
+                }
+            } catch (error) {
+                console.error('Failed to save with fallback method:', error);
+                showNotification('Error saving game. Please use Export to save your progress.');
+            }
+        }
+        
+        // Load game from the best available method
+        async function loadGame() {
+            if (storageMethod === 'indexedDB') {
+                try {
+                    const db = await initializeDB();
+                    const transaction = db.transaction(['saveData'], 'readonly');
+                    const store = transaction.objectStore('saveData');
+                    const request = store.get('mainSave');
+                    
+                    request.onsuccess = (event) => {
+                        const savedData = event.target.result;
+                        if (savedData && savedData.gameState) {
+                            loadGameState(JSON.parse(savedData.gameState));
+                        } else {
+                            loadFallback(); // Try localStorage if no data in IndexedDB
+                        }
+                    };
+                    
+                    request.onerror = (event) => {
+                        console.error('Error loading from IndexedDB:', event.target.error);
+                        loadFallback(); // Try localStorage if IndexedDB fails
+                    };
+                } catch (error) {
+                    console.error('Failed to load from IndexedDB:', error);
+                    loadFallback(); // Try localStorage if IndexedDB fails
+                }
+            } else {
+                loadFallback();
+            }
+        }
+        
+        // Fallback load method using localStorage
+        function loadFallback() {
+            try {
+                if (storageMethod === 'localStorage') {
+                    const savedGame = localStorage.getItem('starCollectorSave');
+                    if (savedGame) {
+                        loadGameState(JSON.parse(savedGame));
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load with fallback method:', error);
+                showNotification('Error loading game. You may need to import a save.');
+            }
+        }
+        
+        // Export save as a string
+        function exportSave() {
+            try {
+                const saveString = btoa(JSON.stringify(game));
+                
+                // Create modal for export
+                const exportModal = document.createElement('div');
+                exportModal.className = 'modal';
+                exportModal.style.display = 'flex';
+                
+                exportModal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Export Save</h2>
+                            <button class="close-modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Copy the text below to save your game:</p>
+                            <textarea id="export-text" style="width: 100%; height: 100px; margin-bottom: 10px;">${saveString}</textarea>
+                            <button id="copy-export" class="button">Copy to Clipboard</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(exportModal);
+                
+                // Set up event listeners
+                exportModal.querySelector('.close-modal').addEventListener('click', () => {
+                    exportModal.remove();
+                });
+                
+                exportModal.querySelector('#copy-export').addEventListener('click', () => {
+                    const exportText = document.getElementById('export-text');
+                    exportText.select();
+                    document.execCommand('copy');
+                    showNotification('Save copied to clipboard!');
+                });
+                
+                // Close modal when clicking outside
+                exportModal.addEventListener('click', (e) => {
+                    if (e.target === exportModal) {
+                        exportModal.remove();
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to export save:', error);
+                showNotification('Error exporting save.');
+            }
+        }
+        
+        // Import save from a string
+        function importSave() {
+            // Create modal for import
+            const importModal = document.createElement('div');
+            importModal.className = 'modal';
+            importModal.style.display = 'flex';
+            
+            importModal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Import Save</h2>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Paste your save code below:</p>
+                        <textarea id="import-text" style="width: 100%; height: 100px; margin-bottom: 10px;"></textarea>
+                        <button id="do-import" class="button">Import Save</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(importModal);
+            
+            // Set up event listeners
+            importModal.querySelector('.close-modal').addEventListener('click', () => {
+                importModal.remove();
+            });
+            
+            importModal.querySelector('#do-import').addEventListener('click', () => {
+                const importText = document.getElementById('import-text').value.trim();
+                
+                try {
+                    const importedGame = JSON.parse(atob(importText));
+                    loadGameState(importedGame);
+                    importModal.remove();
+                    showNotification('Save imported successfully!');
+                } catch (error) {
+                    console.error('Failed to import save:', error);
+                    showNotification('Error importing save. The save code might be invalid.');
+                }
+            });
+            
+            // Close modal when clicking outside
+            importModal.addEventListener('click', (e) => {
+                if (e.target === importModal) {
+                    importModal.remove();
+                }
+            });
+        }
+        
+        // Load game state from a parsed save
+        function loadGameState(loadedGame) {
+            // Manually merge to preserve new content in game object
+            game.stars = loadedGame.stars || 0;
+            game.totalStars = loadedGame.totalStars || 0;
+            game.clickPower = loadedGame.clickPower || 1;
+            game.starsPerSecond = loadedGame.starsPerSecond || 0;
+            game.stardust = loadedGame.stardust || 0;
+            game.totalStardust = loadedGame.totalStardust || 0;
+            game.cosmicDust = loadedGame.cosmicDust || 0;
+            game.blackHoleEnergy = loadedGame.blackHoleEnergy || 0;
+            game.prestigeMultiplier = loadedGame.prestigeMultiplier || 1;
+            game.clickMultiplier = loadedGame.clickMultiplier || 1;
+            game.productionMultiplier = loadedGame.productionMultiplier || 1;
+            game.unlocks = loadedGame.unlocks || {
+                stardust: false,
+                cosmicDust: false,
+                blackHoleEnergy: false,
+                prestigeTab: false,
+                celestialTab: false
+            };
+            game.stats = loadedGame.stats || {
+                totalClicks: 0,
+                totalResets: 0,
+                playTime: 0
+            };
+            
+            // Load buildings
+            if (loadedGame.buildings) {
+                loadedGame.buildings.forEach(loadedBuilding => {
+                    const building = game.buildings.find(b => b.id === loadedBuilding.id);
+                    if (building) {
+                        building.count = loadedBuilding.count || 0;
+                        if (loadedBuilding.baseProduction) {
+                            building.baseProduction = loadedBuilding.baseProduction;
+                        }
+                    }
+                });
+            }
+            
+            // Load upgrades
+            if (loadedGame.upgrades) {
+                loadedGame.upgrades.forEach(loadedUpgrade => {
+                    const upgrade = game.upgrades.find(u => u.id === loadedUpgrade.id);
+                    if (upgrade) {
+                        upgrade.purchased = loadedUpgrade.purchased || false;
+                    }
+                });
+            }
+            
+            // Load prestige upgrades
+            if (loadedGame.prestigeUpgrades) {
+                loadedGame.prestigeUpgrades.forEach(loadedUpgrade => {
+                    const upgrade = game.prestigeUpgrades.find(u => u.id === loadedUpgrade.id);
+                    if (upgrade) {
+                        upgrade.purchased = loadedUpgrade.purchased || false;
+                        if (upgrade.maxLevel) {
+                            upgrade.level = loadedUpgrade.level || 0;
+                        }
+                    }
+                });
+            }
+            
+            // Load celestial entities
+            if (loadedGame.celestialEntities) {
+                loadedGame.celestialEntities.forEach(loadedEntity => {
+                    const entity = game.celestialEntities.find(e => e.id === loadedEntity.id);
+                    if (entity) {
+                        entity.purchased = loadedEntity.purchased || false;
+                    }
+                });
+            }
+            
+            // Load achievements
+            if (loadedGame.achievements) {
+                loadedGame.achievements.forEach(loadedAchievement => {
+                    const achievement = game.achievements.find(a => a.id === loadedAchievement.id);
+                    if (achievement) {
+                        achievement.unlocked = loadedAchievement.unlocked || false;
+                    }
+                });
+            }
+            
+            // Handle time offline
+            const now = Date.now();
+            const offlineTime = Math.floor((now - (loadedGame.lastUpdate || now)) / 1000);
+            if (offlineTime > 0) {
+                const offlineProduction = offlineTime * game.starsPerSecond;
+                game.stars += offlineProduction;
+                game.totalStars += offlineProduction;
+                
+                if (offlineTime > 60) {
+                    showNotification(`Welcome back! You were away for ${formatTime(offlineTime)} and earned ${formatNumber(offlineProduction)} stars!`);
+                }
+            }
+            
+            game.lastUpdate = now;
+            
+            updateStarsPerSecond();
+            updateResourcesVisibility();
+            updateTabsVisibility();
+            renderBuildings();
+            renderUpgrades();
+            renderPrestigeUpgrades();
+            renderCelestialEntities();
+            renderAchievements();
+            updateUI();
+        }
+        
+        // Calculate stardust gain
+        function calculateStardustGain() {
+            if (game.stars < 1000000) return 0;
+            return Math.floor(Math.sqrt(game.stars / 1000000));
+        }
+        
+        // Calculate prestige bonus
+        function calculatePrestigeBonus() {
+            let stardustEfficiency = 1;
+            const stardustEfficiencyUpgrade = getPrestigeUpgradeById('stardust_efficiency');
+            if (stardustEfficiencyUpgrade.level > 0) {
+                stardustEfficiency = 1 + (stardustEfficiencyUpgrade.level * 0.01);
+            }
+            
+            let supernovaMultiplier = 1;
+            if (getCelestialEntityById('supernova').purchased) {
+                supernovaMultiplier = 2;
+            }
+            
+            return 1 + ((game.stardust * 0.01 * stardustEfficiency) * supernovaMultiplier);
+        }
+        
+        // Calculate click multiplier
+        function calculateClickMultiplier() {
+            let clickBoost = 1;
+            if (getPrestigeUpgradeById('click_boost').purchased) {
+                clickBoost = 1 + (game.stardust * 0.005);
+            }
+            
+            return game.clickMultiplier * clickBoost;
+        }
+        
+        // Update stars per second
+        function updateStarsPerSecond() {
+            let perSecond = 0;
+            
+            game.buildings.forEach(building => {
+                perSecond += building.count * building.baseProduction;
+            });
+            
+            // Apply prestige bonus
+            perSecond *= calculatePrestigeBonus();
+            
+            // Apply production multiplier
+            perSecond *= game.productionMultiplier;
+            
+            game.starsPerSecond = perSecond;
+            document.getElementById('stars-per-second').textContent = formatNumber(perSecond, 1);
+        }
+        
+        // Format number with commas and abbreviations
+        function formatNumber(num, decimals = 0) {
+            if (num < 1000) return num.toFixed(decimals);
+            
+            const units = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+            const unit = Math.floor(Math.log10(num) / 3);
+            const value = num / Math.pow(1000, unit);
+            return value.toFixed(decimals) + units[unit];
+        }
+        
+        // Format time
+        function formatTime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+            if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+            if (minutes > 0) return `${minutes}m ${secs}s`;
+            return `${secs}s`;
+        }
+        
+        // Get building by ID
+        function getBuildingById(id) {
+            return game.buildings.find(building => building.id === id);
+        }
+        
+        // Get upgrade by ID
+        function getUpgradeById(id) {
+            return game.upgrades.find(upgrade => upgrade.id === id);
+        }
+        
+        // Get prestige upgrade by ID
+        function getPrestigeUpgradeById(id) {
+            return game.prestigeUpgrades.find(upgrade => upgrade.id === id);
+        }
+        
+        // Get celestial entity by ID
+        function getCelestialEntityById(id) {
+            return game.celestialEntities.find(entity => entity.id === id);
+        }
+        
+        // Get achievement by ID
+        function getAchievementById(id) {
+            return game.achievements.find(achievement => achievement.id === id);
+        }
+        
+        // Calculate building cost
+        function calculateBuildingCost(building) {
+            return Math.floor(building.baseCost * Math.pow(building.costGrowth, building.count));
+        }
+        
+        // Buy building
+        function buyBuilding(id) {
+            const building = getBuildingById(id);
+            const cost = calculateBuildingCost(building);
+            
+            if (game.stars >= cost) {
+                game.stars -= cost;
+                building.count++;
+                updateStarsPerSecond();
+                renderBuildings();
+                updateUI();
+                checkAchievements();
+            }
+        }
+        
+        // Buy upgrade
+        function buyUpgrade(id) {
+            const upgrade = getUpgradeById(id);
+            
+            if (game.stars >= upgrade.cost && !upgrade.purchased) {
+                game.stars -= upgrade.cost;
+                upgrade.purchased = true;
+                upgrade.effect();
+                renderUpgrades();
+                updateUI();
+                checkAchievements();
+            }
+        }
+        
+        // Buy prestige upgrade
+        function buyPrestigeUpgrade(id) {
+            const upgrade = getPrestigeUpgradeById(id);
+            const resource = upgrade.costType === 'stardust' ? game.stardust : (upgrade.costType === 'cosmicDust' ? game.cosmicDust : game.stars);
+            
+            if (resource >= upgrade.cost && (!upgrade.purchased || (upgrade.maxLevel && upgrade.level < upgrade.maxLevel))) {
+                if (upgrade.costType === 'stardust') {
+                    game.stardust -= upgrade.cost;
+                } else if (upgrade.costType === 'cosmicDust') {
+                    game.cosmicDust -= upgrade.cost;
+                } else {
+                    game.stars -= upgrade.cost;
+                }
+                
+                if (upgrade.maxLevel) {
+                    upgrade.level++;
+                } else {
+                    upgrade.purchased = true;
+                }
+                
+                if (upgrade.effect) {
+                    upgrade.effect();
+                }
+                
+                renderPrestigeUpgrades();
+                updateUI();
+                checkAchievements();
+            }
+        }
+        
+        // Buy celestial entity
+        function buyCelestialEntity(id) {
+            const entity = getCelestialEntityById(id);
+            
+            if (game.cosmicDust >= entity.cost && !entity.purchased) {
+                game.cosmicDust -= entity.cost;
+                entity.purchased = true;
+                
+                if (entity.effect) {
+                    entity.effect();
+                }
+                
+                renderCelestialEntities();
+                updateUI();
+                checkAchievements();
+            }
+        }
+        
+        // Reset game for prestige
+        function prestigeReset() {
+            const stardustGain = calculateStardustGain();
+            
+            if (stardustGain <= 0) return;
+            
+            // Check for cosmic dust gain
+            let cosmicDustGain = 0;
+            if (game.unlocks.cosmicDust && stardustGain >= 100) {
+                cosmicDustGain = Math.floor(Math.sqrt(stardustGain / 100));
+                game.cosmicDust += cosmicDustGain;
+                if (cosmicDustGain > 0) {
+                    game.unlocks.celestialTab = true;
+                }
+            }
+            
+            // Keep track of total stardust
+            game.stardust += stardustGain;
+            game.totalStardust += stardustGain;
+            
+            // Check for starter pack
+            const starterPack = getPrestigeUpgradeById('starter_pack');
+            
+            // Reset relevant game state
+            game.stars = 0;
+            game.clickPower = 1;
+            game.starsPerSecond = 0;
+            game.clickMultiplier = 1;
+            game.productionMultiplier = 1;
+            game.stats.totalResets++;
+            
+            // Apply starter pack if purchased
+            if (starterPack.purchased) {
+                const telescope = getBuildingById('telescope');
+                telescope.count = 10;
+            }
+            
+            // Reset buildings
+            game.buildings.forEach(building => {
+                if (building.id !== 'telescope' || !starterPack.purchased) {
+                    building.count = 0;
+                }
+                
+                // Reset production to base values
+                switch (building.id) {
+                    case 'telescope': building.baseProduction = 0.1; break;
+                    case 'observatory': building.baseProduction = 0.5; break;
+                    case 'satellite': building.baseProduction = 4; break;
+                    case 'space_station': building.baseProduction = 20; break;
+                    case 'moon_base': building.baseProduction = 100; break;
+                    case 'planetary_collector': building.baseProduction = 500; break;
+                    case 'star_harvester': building.baseProduction = 3000; break;
+                    case 'galaxy_manipulator': building.baseProduction = 15000; break;
+                    case 'cosmic_string': building.baseProduction = 75000; break;
+                }
+            });
+            
+            // Reset upgrades
+            game.upgrades.forEach(upgrade => {
+                upgrade.purchased = false;
+            });
+            
+            // Enable stardust visibility
+            game.unlocks.stardust = true;
+            
+            // Re-apply celestial effects
+            game.celestialEntities.forEach(entity => {
+                if (entity.purchased && entity.effect) {
+                    entity.effect();
+                }
+            });
+            
+            // Show notification
+            let message = `Reset complete! You gained ${formatNumber(stardustGain)} stardust`;
+            if (cosmicDustGain > 0) {
+                message += ` and ${formatNumber(cosmicDustGain)} cosmic dust`;
+            }
+            showNotification(message);
+            
+            updateStarsPerSecond();
+            renderBuildings();
+            renderUpgrades();
+            renderPrestigeUpgrades();
+            renderCelestialEntities();
+            updateResourcesVisibility();
+            updateTabsVisibility();
+            updateUI();
+            checkAchievements();
+        }
+        
+        // Hard reset
+        function hardReset() {
+            if (confirm('Are you sure you want to completely reset your game? All progress will be lost!')) {
+                localStorage.removeItem('starCollectorSave');
+                location.reload();
+            }
+        }
+        
+        // Update UI elements
+        function updateUI() {
+            document.getElementById('stars').textContent = formatNumber(game.stars, 0);
+            
+            if (game.unlocks.stardust) {
+                document.getElementById('stardust').textContent = formatNumber(game.stardust, 0);
+                document.getElementById('stardust-gain').textContent = formatNumber(calculateStardustGain(), 0);
+                
+                // Enable prestige button if stardust gain > 0
+                document.getElementById('prestige-button').disabled = calculateStardustGain() <= 0;
+            }
+            
+            if (game.unlocks.cosmicDust) {
+                document.getElementById('cosmic-dust').textContent = formatNumber(game.cosmicDust, 0);
+                document.getElementById('cosmic-dust-display').textContent = formatNumber(game.cosmicDust, 0);
+            }
+            
+            if (game.unlocks.blackHoleEnergy) {
+                document.getElementById('black-hole-energy').textContent = formatNumber(game.blackHoleEnergy, 0);
+            }
+        }
+        
+        // Update resources visibility
+        function updateResourcesVisibility() {
+            document.getElementById('stardust-container').style.display = game.unlocks.stardust ? 'flex' : 'none';
+            document.getElementById('cosmic-dust-container').style.display = game.unlocks.cosmicDust ? 'flex' : 'none';
+            document.getElementById('black-hole-energy-container').style.display = game.unlocks.blackHoleEnergy ? 'flex' : 'none';
+        }
+        
+        // Update tabs visibility
+        function updateTabsVisibility() {
+            // Show prestige tab after first 1,000,000 stars
+            if (game.totalStars >= 1000000 || game.unlocks.prestigeTab || game.stardust > 0) {
+                game.unlocks.prestigeTab = true;
+                document.querySelector('.tab[data-tab="prestige"]').style.display = 'block';
+            } else {
+                document.querySelector('.tab[data-tab="prestige"]').style.display = 'none';
+            }
+            
+            // Show celestial tab if unlocked
+            if (game.unlocks.celestialTab || game.cosmicDust > 0) {
+                game.unlocks.celestialTab = true;
+                document.querySelector('.tab[data-tab="celestial"]').style.display = 'block';
+            } else {
+                document.querySelector('.tab[data-tab="celestial"]').style.display = 'none';
+            }
+        }
+        
+        // Render buildings
+        function renderBuildings() {
+            const buildingsContainer = document.getElementById('buildings-list');
+            buildingsContainer.innerHTML = '';
+            
+            game.buildings.forEach(building => {
+                // Check if building should be unlocked
+                if (building.requirement && !building.unlocked) {
+                    building.unlocked = building.requirement();
+                }
+                
+                if (building.unlocked) {
+                    const cost = calculateBuildingCost(building);
+                    const canAfford = game.stars >= cost;
+                    
+                    const buildingElement = document.createElement('div');
+                    buildingElement.className = `item ${canAfford ? '' : 'disabled'}`;
+                    buildingElement.innerHTML = `
+                        <div class="item-info">
+                            <div class="item-name">${building.name}</div>
+                            <div class="item-desc">${building.description}</div>
+                            <div class="item-owned">Owned: ${building.count}</div>
+                            <div class="item-production">Each: ${formatNumber(building.baseProduction * calculatePrestigeBonus() * game.productionMultiplier, 1)}/s</div>
+                            <div class="item-total">Total: ${formatNumber(building.count * building.baseProduction * calculatePrestigeBonus() * game.productionMultiplier, 1)}/s</div>
+                        </div>
+                        <div class="item-cost">${formatNumber(cost)} stars</div>
+                    `;
+                    
+                    buildingElement.addEventListener('click', () => {
+                        buyBuilding(building.id);
+                    });
+                    
+                    buildingsContainer.appendChild(buildingElement);
+                }
+            });
+        }
+        
+        // Render upgrades
+        function renderUpgrades() {
+            const upgradesContainer = document.getElementById('upgrades-list');
+            upgradesContainer.innerHTML = '';
+            
+            game.upgrades.forEach(upgrade => {
+                // Skip if already purchased
+                if (upgrade.purchased) return;
+                
+                // Check if upgrade should be unlocked
+                if (upgrade.requirement && !upgrade.unlocked) {
+                    upgrade.unlocked = upgrade.requirement();
+                }
+                
+                if (upgrade.unlocked) {
+                    const canAfford = game.stars >= upgrade.cost;
+                    
+                    const upgradeElement = document.createElement('div');
+                    upgradeElement.className = `item ${canAfford ? '' : 'disabled'}`;
+                    upgradeElement.innerHTML = `
+                        <div class="item-info">
+                            <div class="item-name">${upgrade.name}</div>
+                            <div class="item-desc">${upgrade.description}</div>
+                        </div>
+                        <div class="item-cost">${formatNumber(upgrade.cost)} stars</div>
+                    `;
+                    
+                    upgradeElement.addEventListener('click', () => {
+                        buyUpgrade(upgrade.id);
+                    });
+                    
+                    upgradesContainer.appendChild(upgradeElement);
+                }
+            });
+            
+            // Show a message if no upgrades are available
+            if (upgradesContainer.children.length === 0) {
+                upgradesContainer.innerHTML = '<div class="item disabled"><div class="item-info"><div class="item-name">No upgrades available</div><div class="item-desc">Keep playing to unlock more upgrades!</div></div></div>';
+            }
+        }
+        
+        // Render prestige upgrades
+        function renderPrestigeUpgrades() {
+            const prestigeUpgradesContainer = document.getElementById('prestige-upgrades');
+            prestigeUpgradesContainer.innerHTML = '';
+            
+            game.prestigeUpgrades.forEach(upgrade => {
+                // Skip if already purchased and not levelable
+                if (upgrade.purchased && !upgrade.maxLevel) return;
+                // Skip if at max level
+                if (upgrade.maxLevel && upgrade.level >= upgrade.maxLevel) return;
+                
+                if (upgrade.unlocked) {
+                    const resource = upgrade.costType === 'stardust' ? game.stardust : (upgrade.costType === 'cosmicDust' ? game.cosmicDust : game.stars);
+                    const canAfford = resource >= upgrade.cost;
+                    
+                    const upgradeElement = document.createElement('div');
+                    upgradeElement.className = `item ${canAfford ? '' : 'disabled'}`;
+                    
+                    let nameDisplay = upgrade.name;
+                    if (upgrade.maxLevel) {
+                        nameDisplay += ` (${upgrade.level}/${upgrade.maxLevel})`;
+                    }
+                    
+                    upgradeElement.innerHTML = `
+                        <div class="item-info">
+                            <div class="item-name">${nameDisplay}</div>
+                            <div class="item-desc">${upgrade.description}</div>
+                        </div>
+                        <div class="item-cost">${formatNumber(upgrade.cost)} ${upgrade.costType}</div>
+                    `;
+                    
+                    upgradeElement.addEventListener('click', () => {
+                        buyPrestigeUpgrade(upgrade.id);
+                    });
+                    
+                    prestigeUpgradesContainer.appendChild(upgradeElement);
+                }
+            });
+            
+            // Show a message if no prestige upgrades are available
+            if (prestigeUpgradesContainer.children.length === 0) {
+                prestigeUpgradesContainer.innerHTML = '<div class="item disabled"><div class="item-info"><div class="item-name">No prestige upgrades available</div><div class="item-desc">You\'ve purchased all available prestige upgrades!</div></div></div>';
+            }
+        }
+        
+        // Render celestial entities
+        function renderCelestialEntities() {
+            const celestialEntitiesContainer = document.getElementById('celestial-entities');
+            celestialEntitiesContainer.innerHTML = '';
+            
+            game.celestialEntities.forEach(entity => {
+                // Skip if already purchased
+                if (entity.purchased) {
+                    const entityElement = document.createElement('div');
+                    entityElement.className = 'item';
+                    entityElement.innerHTML = `
+                        <div class="item-info">
+                            <div class="item-name">${entity.name}</div>
+                            <div class="item-desc">${entity.description}</div>
+                            <div class="celestial-effect">${entity.effect}</div>
+                        </div>
+                        <div class="item-cost">Purchased</div>
+                    `;
+                    
+                    celestialEntitiesContainer.appendChild(entityElement);
+                    return;
+                }
+                
+                if (entity.unlocked) {
+                    const canAfford = game.cosmicDust >= entity.cost;
+                    
+                    const entityElement = document.createElement('div');
+                    entityElement.className = `item ${canAfford ? '' : 'disabled'}`;
+                    entityElement.innerHTML = `
+                        <div class="item-info">
+                            <div class="item-name">${entity.name}</div>
+                            <div class="item-desc">${entity.description}</div>
+                            <div class="celestial-effect">${entity.effect}</div>
+                        </div>
+                        <div class="item-cost">${formatNumber(entity.cost)} ${entity.costType}</div>
+                    `;
+                    
+                    entityElement.addEventListener('click', () => {
+                        buyCelestialEntity(entity.id);
+                    });
+                    
+                    celestialEntitiesContainer.appendChild(entityElement);
+                }
+            });
+            
+            // Show a message if no celestial entities are available
+            if (celestialEntitiesContainer.children.length === 0) {
+                celestialEntitiesContainer.innerHTML = '<div class="item disabled"><div class="item-info"><div class="item-name">No celestial entities available</div><div class="item-desc">You\'ve purchased all available celestial entities!</div></div></div>';
+            }
+        }
+        
+        // Render achievements
+        function renderAchievements() {
+            const achievementsContainer = document.getElementById('achievements-list');
+            achievementsContainer.innerHTML = '';
+            
+            game.achievements.forEach(achievement => {
+                // Skip hidden achievements that aren't unlocked
+                if (achievement.hidden && !achievement.unlocked) return;
+                
+                const achievementElement = document.createElement('div');
+                achievementElement.className = `achievement ${achievement.unlocked ? '' : 'locked'}`;
+                
+                achievementElement.innerHTML = `
+                    <div class="achievement-icon">
+                        ${achievement.unlocked ? '★' : '?'}
+                    </div>
+                    <div class="achievement-info">
+                        <div class="achievement-name">${achievement.name}</div>
+                        <div class="achievement-desc">${achievement.description}</div>
+                    </div>
+                `;
+                
+                achievementsContainer.appendChild(achievementElement);
+            });
+        }
+        
+        // Check achievements
+        function checkAchievements() {
+            let newAchievements = 0;
+            
+            game.achievements.forEach(achievement => {
+                if (!achievement.unlocked && achievement.condition()) {
+                    achievement.unlocked = true;
+                    newAchievements++;
+                    
+                    // Show notification
+                    showNotification(`Achievement unlocked: ${achievement.name}!`);
+                }
+            });
+            
+            if (newAchievements > 0) {
+                renderAchievements();
+            }
+        }
+        
+        // Show notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Remove after animation
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Create floating numbers when clicking
+        function createFloatingNumber(x, y, amount) {
+            const floatingText = document.createElement('div');
+            floatingText.className = 'floating-text';
+            floatingText.textContent = `+${formatNumber(amount)}`;
+            floatingText.style.left = `${x}px`;
+            floatingText.style.top = `${y}px`;
+            
+            document.body.appendChild(floatingText);
+            
+            // Remove after animation
+            setTimeout(() => {
+                floatingText.remove();
+            }, 2000);
+        }
+        
+        // Create starfield
+        function createStarfield() {
+            const canvas = document.getElementById('starfield');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const stars = [];
+            const starCount = 100;
+            
+            // Create stars
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2,
+                    speed: Math.random() * 0.5
+                });
+            }
+            
+            // Animate stars
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                stars.forEach(star => {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Move star
+                    star.y += star.speed;
+                    
+                    // Reset if out of bounds
+                    if (star.y > canvas.height) {
+                        star.y = 0;
+                        star.x = Math.random() * canvas.width;
+                    }
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+            
+            // Resize canvas on window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+        
+        // Game loop
+        function gameLoop() {
+            // Calculate delta time
+            const now = Date.now();
+            const deltaTime = (now - game.lastUpdate) / 1000;
+            game.lastUpdate = now;
+            
+            // Add playtime
+            game.stats.playTime += deltaTime;
+            
+            // Calculate production
+            const production = game.starsPerSecond * deltaTime;
+            game.stars += production;
+            game.totalStars += production;
+            
+            // Generate black hole energy if unlocked
+            if (game.unlocks.blackHoleEnergy) {
+                const bhEnergy = Math.sqrt(game.starsPerSecond) * deltaTime * 0.01;
+                game.blackHoleEnergy += bhEnergy;
+            }
+            
+            // Update UI
+            updateUI();
+            
+            // Check for unlocks
+            checkUnlocks();
+            
+            // Check achievements
+            checkAchievements();
+            
+            // Auto-save every 30 seconds (if a storage method is available)
+            if (now - game.lastSave > 30000 && storageMethod !== 'none') {
+                saveGame();
+            }
+            
+            // Schedule next update
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Check for game progression unlocks
+        function checkUnlocks() {
+            // Update building visibility based on requirements
+            game.buildings.forEach(building => {
+                if (building.requirement && !building.unlocked) {
+                    building.unlocked = building.requirement();
+                    if (building.unlocked) {
+                        renderBuildings();
+                    }
+                }
+            });
+            
+            // Update upgrade visibility based on requirements
+            game.upgrades.forEach(upgrade => {
+                if (upgrade.requirement && !upgrade.unlocked) {
+                    upgrade.unlocked = upgrade.requirement();
+                    if (upgrade.unlocked) {
+                        renderUpgrades();
+                    }
+                }
+            });
+            
+            // Unlock prestige tab when enough stars are collected
+            if (game.totalStars >= 1000000 && !game.unlocks.prestigeTab) {
+                game.unlocks.prestigeTab = true;
+                updateTabsVisibility();
+                showNotification('Prestige system unlocked!');
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize game
+            initGame();
+            
+            // Load game
+            loadGame();
+            
+            // Setup starfield
+            createStarfield();
+            
+            // Handle star clicking
+            const star = document.getElementById('star');
+            const starContainer = document.getElementById('star-container');
+            
+            starContainer.addEventListener('click', (e) => {
+                // Calculate click value
+                let clickValue = game.clickPower;
+                
+                // Apply prestige bonus
+                clickValue *= calculatePrestigeBonus();
+                
+                // Apply click multiplier
+                clickValue *= calculateClickMultiplier();
+                
+                // Add stellar formation bonus if purchased
+                if (getUpgradeById('stellar_formation').purchased) {
+                    clickValue += game.starsPerSecond * 0.1;
+                }
+                
+                // Add stars
+                game.stars += clickValue;
+                game.totalStars += clickValue;
+                
+                // Increase stats
+                game.stats.totalClicks++;
+                
+                // Create floating number
+                const rect = starContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                createFloatingNumber(rect.left + x, rect.top + y, clickValue);
+                
+                // Update UI
+                updateUI();
+                
+                // Check achievements
+                checkAchievements();
+            });
+            
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    
+                    // Show selected tab content
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Add active class to selected tab
+                    tab.classList.add('active');
+                });
+            });
+            
+            // Save button
+            document.getElementById('save-button').addEventListener('click', saveGame);
+            
+            // Export button
+            document.getElementById('export-button').addEventListener('click', exportSave);
+            
+            // Import button
+            document.getElementById('import-button').addEventListener('click', importSave);
+            
+            // Reset button
+            document.getElementById('reset-button').addEventListener('click', hardReset);
+            
+            // Prestige button
+            document.getElementById('prestige-button').addEventListener('click', prestigeReset);
+            
+            // Help button and modal
+            const helpModal = document.getElementById('help-modal');
+            const helpButton = document.getElementById('help-button');
+            const closeModal = document.querySelector('.close-modal');
+            
+            helpButton.addEventListener('click', () => {
+                helpModal.style.display = 'flex';
+            });
+            
+            closeModal.addEventListener('click', () => {
+                helpModal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === helpModal) {
+                    helpModal.style.display = 'none';
+                }
+            });
+            
+            // Start game loop
+            gameLoop();
+        });
+    </script>
+</body>
+</html>
